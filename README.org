@@ -252,5 +252,8 @@ And most importantly: Thank you for using YAMS! 🙏
 #+HTML: <a href="https://github.com/rogsme/yams/graphs/contributors">
 #+HTML:   <img src="https://contrib.rocks/image?repo=rogsme/yams" />
 #+HTML: </a>
+#+HTML: <a href="https://github.com/rogsme/yams.media/graphs/contributors">
+#+HTML:   <img src="https://contrib.rocks/image?repo=rogsme/yams.media" />
+#+HTML: </a>
 
 Made with [[https://contrib.rocks][contrib.rocks]].
