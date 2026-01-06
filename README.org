@@ -147,12 +147,13 @@ Commands:
 restart                   restarts yams services
 stop                      stops all yams services
 start                     starts yams services
+status                    checks yams services status
 destroy                   destroy yams services so you can start from scratch
 check-vpn                 checks if the VPN is working as expected
 backup                    backs up yams to the destination location
 
 Examples:
-  yams start              # Start all YAMS services
+  yams start                   # Start all YAMS services
   yams backup /path/to/backup  # Backup YAMS to specified directory
 #+end_src
 
