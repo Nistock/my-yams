@@ -237,6 +237,9 @@ YAMS wouldn't be possible without:
   + [[https://gitlab.com/austin.eschweiler][Austin]]
   + [[https://gitlab.com/Loriage][Loriage]] (Thank you for the french translation! 🇫🇷)
   + [[https://github.com/MoMoiin][MoMoiin]]
+  + [[https://github.com/ak4zh][ak4zh]]
+  + [[https://gitlab.com/zavan][zavan]] (Thank you for the MacOS port! https://gitlab.com/zavan/yams)
+  + [[https://github.com/not-first][not-first]]
 - The YAMS community for testing and feedback
 - https://patorjk.com/software/taag/ for the ascii art!
 
@@ -249,6 +252,9 @@ And most importantly: Thank you for using YAMS! 🙏
 
 #+HTML: <a href="https://github.com/rogsme/yams/graphs/contributors">
 #+HTML:   <img src="https://contrib.rocks/image?repo=rogsme/yams" />
+#+HTML: </a>
+#+HTML: <a href="https://github.com/rogsme/yams.media/graphs/contributors">
+#+HTML:   <img src="https://contrib.rocks/image?repo=rogsme/yams.media" />
 #+HTML: </a>
 
 Made with [[https://contrib.rocks][contrib.rocks]].
