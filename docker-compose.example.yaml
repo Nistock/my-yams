@@ -168,6 +168,8 @@ services:
       - PORT_FORWARD_ONLY=on
       - VPN_PORT_FORWARDING=on
       - FIREWALL_OUTBOUND_SUBNETS=172.60.0.0/24
+    volumes:
+      - ${INSTALL_DIRECTORY}/config/gluetun:/gluetun
     restart: unless-stopped
     networks:
       yams_network:
