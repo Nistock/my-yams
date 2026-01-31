@@ -464,6 +464,10 @@ fi
                -e 's|#- 8080:8080/tcp # gluetun|- 8080:8080/tcp # gluetun|g' \
                -e 's|#- 8081:8081/tcp # gluetun|- 8081:8081/tcp # gluetun|g' "$filename" || \
             log_error "Failed to configure VPN settings"
+
+        if [ "${is_protonvpn_free_tier,,}" = "y" ]; then
+            sed -i '/FIREWALL_OUTBOUND_SUBNETS=/a\      - FREE_ONLY=true' "$filename"
+        fi
     fi
 
     # Update YAMS CLI script
