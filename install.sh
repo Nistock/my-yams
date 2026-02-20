@@ -75,6 +75,17 @@ create_and_verify_directory() {
     fi
 }
 
+check_file() {
+    local file="$1"
+
+    if [ ! -f $1 ]; then
+        log_error "The $1 file does not exist ❌"
+    fi
+    if [ ! -r $1 ]; then
+        log_error "The $1 file is not readable ❌. Try following command:  chown root:$USER $1"
+    fi
+}
+
 setup_directory_structure() {
     local media_dir="$1"
 
@@ -287,6 +298,27 @@ EOF
     if [ "$vpn_service" = "mullvad" ]; then
         vpn_password="$vpn_user"
         log_info "Using Mullvad username as password"
+    fi
+
+    if [ "$vpn_service" = "custom" ]; then 
+        read -p "Do you want to specify wireguard file conf? (y/N) [Default = n]: " is_wireguard_file_conf
+        is_wireguard_file_conf=${is_wireguard_file_conf:-"n"}
+        if [ "$is_wireguard_file_conf" ]; then
+            read -p "Specify file path of your file conf. [Default = /opt/yams/wireguard.conf]: " wireguard_file_conf
+            wireguard_file_conf=${wireguard_file_conf:-"/opt/yams/wireguard.conf"}
+            check_file $wireguard_file_conf
+            fields=("PrivateKey = " "Address = " "PublicKey = " "PresharedKey = " "Endpoint = " "AllowedIPs = ")
+            fieldsMapper=("<endpoint_ip>" "<endpoint_port>" "<public_key>" "<private_key>" "<preshared_key>" "<adresses>")
+            index=0
+            while IFS= read -r line; do
+                if [[ "$line" == ${fields[$index]}* ]]; then
+                    toReplace=${fieldsMapper[$index]}
+                    value=${line#*${fields[$index]}}
+                    sed -i -e "s|$toReplace|$value|g" "$env_file" || echo "error"
+                    index=$index+1
+                fi
+            done < "$1"
+        fi
     else
         # Use hidden input for password
         unset vpn_password
