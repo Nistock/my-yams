@@ -2,6 +2,162 @@ networks:
   default:
     external: true
     name: yams_network
+  reverse-proxy:
+    external: true
 
-# services:  -> When you uncomment, remember to remove the space too! "services:" must be left without any spaces around it
-  # Add your custom services here!
+services: # -> When you uncomment, remember to remove the space too! "services:" must be left without any spaces around it
+  nginx-proxy-manager:
+    image: 'jc21/nginx-proxy-manager:latest'
+    restart: always
+    security_opt:
+      - label:disable
+    ports:
+      - '80:80' # Public HTTP Port
+      - '443:443' # Public HTTPS Port
+    volumes:
+      - ${INSTALL_DIRECTORY}/config/npm/container-data:/data
+      - ${INSTALL_DIRECTORY}/config/npm/certs:/etc/letsencrypt
+    networks:
+      - reverse-proxy
+  
+  vaultwarden:
+    image: vaultwarden/server:latest
+    container_name: vaultwarden
+    restart: unless-stopped
+    environment:
+      DOMAIN: "https://vault${MY_DNS_DOMAIN}"
+    volumes:
+      - ${INSTALL_DIRECTORY}/config/vaultwarden/vw-data/:/data/
+    networks:
+      - reverse-proxy
+  
+  db-init:
+    image: mariadb
+    depends_on:
+      - db
+    command: >
+      bash -c "
+      sleep 30 &&
+      mariadb -h db -u root -p${DB_ROOT_PASSWORD} -e \"
+        CREATE DATABASE IF NOT EXISTS gitea CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+        CREATE DATABASE IF NOT EXISTS codimd CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+        CREATE USER IF NOT EXISTS 'gitea'@'%' IDENTIFIED BY '${DB_GITEA_PASSWORD}';
+        CREATE USER IF NOT EXISTS 'codimd'@'%' IDENTIFIED BY '${DB_HEDGEDOC_PASSWORD}';
+        GRANT ALL PRIVILEGES ON gitea.* TO 'gitea'@'%';
+        GRANT ALL PRIVILEGES ON codimd.* TO 'codimd'@'%';
+        FLUSH PRIVILEGES;\""
+
+    networks:
+      - reverse-proxy
+
+  db:
+    container_name: db
+    image: mariadb
+    restart: always
+    volumes:
+      - ${INSTALL_DIRECTORY}/config/mariadb:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
+      - MYSQL_PASSWORD=${DB_NEXTCLOUD_PASSWORD}
+      - MYSQL_DATABASE=nextcloud
+      - MYSQL_USER=nextcloud
+    networks:
+      - reverse-proxy
+  
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+    networks:
+      - reverse-proxy
+
+  redis:
+    image: redis:alpine
+    restart: always
+
+  nextcloud:
+    image: my-nextcloud
+    restart: always
+      #ports:
+      #- 8080:80
+    depends_on:
+      - redis
+      - db
+    volumes:
+      - ${INSTALL_DIRECTORY}/config/nextcloud:/var/www/html
+    environment:
+      - MYSQL_PASSWORD=${DB_NEXTCLOUD_PASSWORD}
+      - MYSQL_DATABASE=nextcloud
+      - MYSQL_USER=nextcloud
+      - MYSQL_HOST=db:3306
+      - NEXTCLOUD_TRUSTED_DOMAINS=cloud${MY_DNS_DOMAIN}
+      - OVERWRITEPROTOCOL=https
+      - OVERWRITECLIURL=https://cloud${MY_DNS_DOMAIN}
+    networks:
+      - reverse-proxy
+
+  samba:
+    image: dockurr/samba
+    container_name: samba
+    environment:
+      NAME: "Data"
+      USER: "samba"
+      PASS: "secret"
+        #ports:
+      #- 445:445
+    volumes:
+      - /srv/data:/storage
+    restart: always
+
+  phpmyadmin:
+    image: phpmyadmin
+    restart: always
+    ports:
+      - 8000:80
+    networks:
+      - reverse-proxy
+  
+  gitea:
+    image: docker.gitea.com/gitea:1.25.4
+    container_name: gitea
+    environment:
+      - USER_UID=${PUID}
+      - USER_GID=${PGID}
+      - GITEA__database__DB_TYPE=mysql
+      - GITEA__database__HOST=db:3306
+      - GITEA__database__NAME=gitea
+      - GITEA__database__USER=gitea
+      - GITEA__database__PASSWD=${DB_GITEA_PASSWORD}
+    restart: always
+    networks:
+      - reverse-proxy
+    volumes:
+      - ${INSTALL_DIRECTORY}/config/gitea:/data
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      #- "3000:3000"
+      - "222:22"
+    depends_on:
+      - db
+
+  hedgedoc:
+    image: quay.io/hedgedoc/hedgedoc:1.10.6
+    environment:
+      - CMD_DB_URL=mysql://codimd:${DB_HEDGEDOC_PASSWORD}@db:3306/codimd
+      - CMD_DOMAIN=doc${MY_DNS_DOMAIN}
+      - CMD_HOST=hedgedoc
+      - CMD_PORT=3000
+      - CMD_URL_ADDPORT=false
+      - CMD_PROTOCOL_USESSL=true
+      - CMD_ALLOW-ORIGIN=['doc${MY_DNS_DOMAIN}','hedgedoc']
+    volumes:
+      - ${INSTALL_DIRECTORY}/config/hedgedoc/uploads:/hedgedoc/public/uploads
+        #ports:
+      #- "3000:3000"
+    restart: always
+    depends_on:
+      - db
+    networks:
+      - reverse-proxy
