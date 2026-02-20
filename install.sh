@@ -564,11 +564,19 @@ update_configuration_files
 
 log_success "Everything installed correctly! 🎉"
 
+# Create nextcloud smb image
+log_info "Creating nextcloud smb image..."
+log_info "This may take a while..."
+
+if ! docker build -t my-nextcloud .; then 
+    log_error "Failed to create Nextcloud with smb"
+fi
+
 # Start services
 log_info "Starting YAMS services..."
 log_info "This may take a while..."
 
-if ! docker compose -f "$install_directory/docker-compose.yaml" up -d; then
+if ! docker compose -f "$install_directory/docker-compose.yaml"  -f "$install_directory/docker-compose.custom.yaml" up -d; then
     log_error "Failed to start YAMS services"
 fi
 
