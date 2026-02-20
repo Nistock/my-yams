@@ -314,7 +314,7 @@ EOF
                 if [[ "$line" == ${fields[$index]}* ]]; then
                     toReplace=${fieldsMapper[$index]}
                     value=${line#*${fields[$index]}}
-                    sed -i -e "s|$toReplace|$value|g" "$env_file" || echo "error"
+                    sed -i -e "s|$toReplace|$value|g" "$env_file" || log_error "Failed to update .env file"
                     index=$index+1
                 fi
             done < "$1"
