@@ -317,7 +317,7 @@ EOF
                     sed -i -e "s|$toReplace|$value|g" "$env_file" || log_error "Failed to update .env file"
                     index=$index+1
                 fi
-            done < "$1"
+            done < "$wireguard_file_conf"
         fi
     else
         # Use hidden input for password
